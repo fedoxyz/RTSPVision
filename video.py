@@ -49,7 +49,6 @@ def start_video(url):
         frame = show_ping(frame, start_time)
         frame = show_fps(frame)
         image = detect_objects(frame) 
-
         cv2.imshow("Camera Stream", image)
         
         if cv2.waitKey(1) & 0xFF == ord('q'):

@@ -1,23 +1,19 @@
 from ultralytics import YOLO
 import cv2
+import supervision as sv
 
 
 model = YOLO("yolo11n.pt")
+byte_tracker = sv.ByteTrack()
+annotator = sv.BoxAnnotator()
 
 def infer_yolo11(image):
     results = model(image)
-    boxes, classes = [], []
-
-    for result in results:
-        boxes = result.boxes.xyxy.cpu().numpy()
-        classes = result.boxes.cls.cpu().numpy()
-
-    return boxes, classes
+    return results
 
 def draw_bbox(image, boxes, classes):
     assert len(boxes) > 0, "No boxes to draw"
     assert len(classes) > 0, "No classes to draw"
-    print(boxes)
     for box, cls in zip(boxes, classes):
         x1, y1, x2, y2 = map(int, box[:4])                                                         
         label = model.names[int(cls)]
@@ -27,11 +23,13 @@ def draw_bbox(image, boxes, classes):
     return image
 
 def detect_objects(frame):
-    boxes, classes = infer_yolo11(frame)
-    if len(boxes) > 0:
-        image = draw_bbox(frame, boxes, classes)
-    else:
-        return frame
-    return image
+#    return frame
+    results = infer_yolo11(frame)
+    detections = sv.Detections.from_ultralytics(results[0])
+#    print(detections)
+    detections = byte_tracker.update_with_detections(detections)
+#    print(detections)
+#    return frame
+    return annotator.annotate(scene=frame.copy(), detections=detections)
 
 
