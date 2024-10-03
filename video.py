@@ -1,6 +1,8 @@
 import time
 import cv2
 from collections import deque
+from object_detection import detect_objects
+import object_detection
 
 def create_fps_counter(avg_window=30):
     start_time = time.time()
@@ -46,8 +48,9 @@ def start_video(url):
         
         frame = show_ping(frame, start_time)
         frame = show_fps(frame)
-        
-        cv2.imshow("Camera Stream", frame)
+        image = detect_objects(frame) 
+
+        cv2.imshow("Camera Stream", image)
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

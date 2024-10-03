@@ -1,5 +1,4 @@
 from controls import setup_camera_controls
-import cv2
 from audio import start_audio
 from video import start_video
 from config import IP, PORT, USERNAME, PASSWORD, RTSP_URL
@@ -8,7 +7,10 @@ from onvif import ONVIFCamera
 def connect_to_camera(ip, port, user, password):
     print("Starting connection")
     try:
+        print(ip, port, user, password)
         mycam = ONVIFCamera(ip, port, user, password)
+
+        print("Connection successful")       
         media = mycam.create_media_service()
         ptz = mycam.create_ptz_service()
         imaging = mycam.create_imaging_service()
@@ -17,7 +19,6 @@ def connect_to_camera(ip, port, user, password):
         if not profiles:
             raise Exception("No media profiles found")
         media_profile = profiles[0]
-        
         return mycam, media, ptz, imaging, media_profile
     except Exception as e:
         print(f"Error connecting to camera: {str(e)}")
