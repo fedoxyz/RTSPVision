@@ -1,0 +1,8 @@
+opencv-python==4.10.0.84
+PyAudio==0.2.14
+ffmpeg==1.4
+keyboard==0.13.5
+zeep==4.2.1
+python-dotenv==1.0.1
+onvif_zeeo==0.2.12
+
