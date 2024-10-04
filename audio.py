@@ -3,6 +3,7 @@ import threading
 import subprocess
 import queue
 import json
+from logger import logger
 
 def get_stream_info(url):
     cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_streams', url]
@@ -29,7 +30,7 @@ def play_audio(audio_queue, stream):
 def start_audio(url):
     audio_stream = get_stream_info(url)
     if audio_stream is None:
-        print("No audio stream found.")
+        logger.warning("No audio stream found.")
         return
 
     # Audio capture using ffmpeg
@@ -59,5 +60,5 @@ def start_audio(url):
     play_thread = threading.Thread(target=play_audio, args=(audio_queue, stream))
     play_thread.start()
 
-    print("Audio is streaming")
+    logger.info("Audio started streaming")
 

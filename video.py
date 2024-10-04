@@ -11,7 +11,6 @@ def create_fps_counter(avg_window=30):
     start_time = time.time()
     frame_times = deque(maxlen=avg_window)
     def show_fps(frame):
-#        print(f"{frame} - frame inside show_fps")
         nonlocal start_time
         current_time = time.time()
         frame_times.append(current_time - start_time)
@@ -22,15 +21,22 @@ def create_fps_counter(avg_window=30):
         return frame
     return show_fps
 
-def create_ping_counter():
-    start_time = time.time()
-    def show_ping(frame):
-#        print(f"{frame} - frame inside show_ping")
-#        print(f"{type(frame)} - type of frame inside inner")
-        ping = (time.time() - start_time) * 1000
-        cv2.putText(frame, f"Ping: {ping:.2f} ms", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+def create_lattency_counter():
+    last_request_time = time.time()
+    
+    def measure_lattency(frame):
+        nonlocal last_request_time
+        current_time = time.time()
+        ping = (current_time - last_request_time) * 1000  # Convert to milliseconds
+        
+        # Update the last request time for the next frame
+        last_request_time = current_time
+        
+        # Add ping text to the frame
+        cv2.putText(frame, f"Frame processing lattency: {ping:.2f} ms", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         return frame
-    return show_ping
+    
+    return measure_lattency
 
 def pipeline(*functions: Callable) -> Callable:
     return lambda x: reduce(lambda v, f: f(v), functions, x)
@@ -40,9 +46,9 @@ def start_video(url: str, *pipeline_functions: Callable):
     
     # Create the pipeline
     process_frame = pipeline(
-        create_ping_counter(),
         create_fps_counter(),
         start_object_detection(),
+        create_lattency_counter(),
         *pipeline_functions
     )
 
@@ -55,10 +61,6 @@ def start_video(url: str, *pipeline_functions: Callable):
 
         # Apply the pipeline to the frame
         frame = process_frame(frame)
-#        print(f"Frame type: {type(frame)}")
-#        print(f"Frame name: {frame.__name__ if hasattr(frame, '__name__') else 'No name'}")
-#        print(f"Frame source: {frame.__module__ if hasattr(frame, '__module__') else 'Unknown module'}")
-#        print(f"Frame docs: {frame.__doc__ if hasattr(frame, '__doc__') else 'No documentation'}")
         cv2.imshow("Camera Stream", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

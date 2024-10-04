@@ -1,6 +1,7 @@
 import keyboard
 import time
 import threading
+from logger import logger
 
 def camera_controls(ptz, media_profile):
     request = ptz.create_type('ContinuousMove')
@@ -16,7 +17,7 @@ def camera_controls(ptz, media_profile):
     
     def stop_movement():
         if last_movement:
-            print("Stopping movement")
+            logger.debug("Stopping movement of camera")
             ptz.Stop({'ProfileToken': media_profile.token})
     
     while True:
@@ -35,7 +36,7 @@ def camera_controls(ptz, media_profile):
             direction, velocity_dict = current_movement
             if current_movement != last_movement:
                 stop_movement()
-                print(f"Moving {direction}")
+                logger.debug(f"Moving {direction}")
                 request.Velocity = velocity_dict
                 ptz.ContinuousMove(request)
                 last_movement = current_movement
@@ -45,10 +46,10 @@ def camera_controls(ptz, media_profile):
         
         if keyboard.is_pressed('x'):
             velocity = min(1.0, velocity + 0.1)
-            print(f"Increased velocity to {velocity:.1f}")
+            logger.debug(f"Increased velocity to {velocity:.1f}")
         elif keyboard.is_pressed('z'):
             velocity = max(0.1, velocity - 0.1)
-            print(f"Decreased velocity to {velocity:.1f}")
+            logger.debug(f"Decreased velocity to {velocity:.1f}")
         
         if keyboard.is_pressed('q'):
             stop_movement()
@@ -60,5 +61,5 @@ def setup_camera_controls(ptz, media_profile):
     control_thread = threading.Thread(target=camera_controls, args=(ptz, media_profile))
     control_thread.daemon = True
     control_thread.start()
-    print("Camera controls are set")
+    logger.info("Camera controls are set")
 

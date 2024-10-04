@@ -1,32 +1,61 @@
 from ultralytics import YOLO
 import cv2
+from torch import Tensor
+import numpy as np
+from logger import logger
 
 model = YOLO("yolo11n.pt")
 
 def infer_yolo11(image):
+    logger.debug("Starting inference of YOLO")
     results = model.track(image, persist=True, tracker="bytetrack.yaml") 
-#    results = model(image)
     return results
 
 def draw_bbox(image, boxes, classes, track_ids):
-#    assert len(boxes) > 0, "No boxes to draw"
-#    assert len(classes) > 0, "No classes to draw"
-    for box, in zip(boxes):
-#        x1, y1, x2, y2 = map(int, box[:4])                                                         
-       # label = model.names[int(cls)]
-#        cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
-#        cv2.putText(image, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-        print("Test")
+    if isinstance(boxes, Tensor):
+        boxes = boxes.cpu().numpy()
+    elif not isinstance(boxes, np.ndarray):
+        boxes = np.array(boxes)
+
+    logger.debug("boxes{}")
+
+    classes = classes.tolist() if isinstance(classes, Tensor) else list(classes)
+    track_ids = track_ids.tolist() if isinstance(track_ids, Tensor) else list(track_ids)
+
+    if len(boxes) == 0:
+        return image
+
+    if boxes.ndim == 1:
+        boxes = boxes.reshape(1, -1)
+
+    for i, (box, cls, track_id) in enumerate(zip(boxes, classes, track_ids)):
+        if len(box) != 4:
+            logger.warning(f"Skipping invalid bounding box: {box}")
+            continue
+
+        x1, y1, x2, y2 = map(int, box[:4])
+
+        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 3)
+
+        label = f"Class: {model.names[int(cls)]}, ID: {track_id}"
+
+        label_size, baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 2, 2)
+        y_label = max(y1, label_size[1])
+        cv2.rectangle(image, (x1, y_label - label_size[1] - baseline), 
+                      (x1 + label_size[0], y_label + baseline), 
+                      (255, 255, 255), cv2.FILLED)
+        cv2.putText(image, label, (x1, y_label), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 3)
+
     return image
 
 def start_object_detection():
 
     def detect_objects(frame):
-#        print(f"{frame} - frame inside detect_objects")
         results = infer_yolo11(frame)
         
         if results[0].boxes:
-            boxes = results[0].boxes.xywh.cpu()
+            boxes = results[0].boxes.xyxy.cpu()
             classes = results[0].boxes.cls.cpu().numpy()
             if classes.size == 0:
                 classes = []
@@ -40,12 +69,5 @@ def start_object_detection():
         return frame
     return detect_objects 
 
-#    return annotated_frame
-#    detections = sv.Detections.from_ultralytics(results[0])
-#    print(detections)
-#    detections = byte_tracker.update_with_detections(detections)
-#    print(detections)
-#    return frame
-#    return annotator.annotate(scene=frame.copy(), detections=detections)
 
 

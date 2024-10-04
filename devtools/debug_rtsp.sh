@@ -1,6 +1,6 @@
 #!/bin/bash
 # Define variables
-RTSP_URL="123" 
+RTSP_URL="123" # Before running the script, put your RTSP_URL here 
 LOG_FILE="rtsp_debug.log"
 
 # Check if ffmpeg is installed
