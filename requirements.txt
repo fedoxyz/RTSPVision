@@ -6,3 +6,4 @@ zeep==4.2.1
 python-dotenv==1.0.1
 onvif_zeep==0.2.12
 colorama==0.4.6
+ultralytics==8.3.5
