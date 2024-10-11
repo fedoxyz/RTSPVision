@@ -3,26 +3,11 @@ import cv2
 from torch import Tensor
 import numpy as np
 from logger import logger
-from tracker.tracker import register_tracker
 
 model = YOLO("yolo11n.pt")
 
-#kwargs = {}
-#kwargs["conf"] = kwargs.get("conf") or 0.1  # ByteTrack-based method needs low confidence predictions as input
-#kwargs["batch"] = kwargs.get("batch") or 1  # batch-size 1 for tracking in videos
-#kwargs["mode"] = "track"
-
-
 def infer_yolo11(image, **kwargs):
-    kwargs["conf"] = 0.1
-    kwargs["batch"] = 1 
-    kwargs["mode"] = "track"
-    logger.debug("Starting inference of YOLO")
-    if not hasattr(infer_yolo11, "_tracker_registered"):
-        register_tracker(model, persist=True)
-        infer_yolo11._tracker_registered = True
-    results = model.predict(image, **kwargs)
-#    results = model.track(image, persist=True, tracker="bytetrack.yaml") 
+    results = model.track(image, persist=True, tracker="bytetrack.yaml") 
     return results
 
 def draw_bbox(image, boxes, classes, track_ids):
